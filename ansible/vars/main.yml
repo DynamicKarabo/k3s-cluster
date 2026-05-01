@@ -1,0 +1,60 @@
+---
+# ── k3s-cluster Ansible Vars ──
+# Sensible defaults for the full provisioning playbook
+
+# ── Common Role ──
+ufw_default_deny: true
+ufw_allowed_ports:
+  - { port: 22, proto: tcp, comment: "SSH" }
+  - { port: 80, proto: tcp, comment: "HTTP" }
+  - { port: 443, proto: tcp, comment: "HTTPS" }
+  - { port: 6443, proto: tcp, comment: "k3s API" }
+
+fail2ban_enabled: true
+fail2ban_max_retries: 5
+fail2ban_bantime: 3600
+
+unattended_upgrades_enabled: true
+unattended_upgrades_reboot: false
+
+docker_install: true
+docker_compose_install: false
+
+# ── k3s Role ──
+k3s_version: v1.35.4+k3s1
+k3s_install_url: "https://get.k3s.io"
+k3s_server: true
+k3s_token: ""
+k3s_tls_san:
+  - "178.105.76.236"
+  - "k3s-cluster.local"
+  - "demo-api.karabo.tech"
+k3s_disable:
+  - traefik  # We keep Traefik for ingress
+k3s_disable_components:
+  - local-storage
+  - metrics-server
+
+# ── ArgoCD Role ──
+argocd_version: 7.8.1
+argocd_namespace: argocd
+argocd_helm_repo: https://argoproj.github.io/argo-helm
+argocd_chart: argo-cd
+argocd_values:
+  server:
+    service:
+      type: NodePort
+      nodePortHttp: 30080
+      nodePortHttps: 30443
+  configs:
+    params:
+      server.insecure: true
+
+# ── cert-manager Role ──
+cert_manager_version: v1.17.1
+cert_manager_namespace: cert-manager
+cert_manager_helm_repo: https://charts.jetstack.io
+cert_manager_chart: cert-manager
+cert_manager_values:
+  installCRDs: true
+letsencrypt_email: karabo@example.com

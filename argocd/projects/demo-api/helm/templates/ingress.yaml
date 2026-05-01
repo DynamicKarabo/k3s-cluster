@@ -1,0 +1,47 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "demo-api.fullname" . }}
+  labels:
+    app: {{ include "demo-api.name" . }}
+    chart: {{ include "demo-api.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.ingress.host }}`)
+      kind: Rule
+      services:
+        - name: {{ include "demo-api.fullname" . }}
+          port: {{ .Values.service.port }}
+  tls:
+    secretName: {{ .Values.ingress.tls.secretName }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "demo-api.fullname" . }}-http
+  labels:
+    app: {{ include "demo-api.name" . }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`{{ .Values.ingress.host }}`)
+      kind: Rule
+      middlewares:
+        - name: {{ include "demo-api.fullname" . }}-redirect
+      services:
+        - name: {{ include "demo-api.fullname" . }}
+          port: {{ .Values.service.port }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "demo-api.fullname" . }}-redirect
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true

@@ -1,0 +1,51 @@
+# ── demo-api Helm values ──
+# Image settings
+image:
+  repository: ghcr.io/dynamickarabo/demo-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Deployment replicas
+replicas: 1
+
+# Service configuration
+service:
+  port: 8080
+  targetPort: 8080
+  type: ClusterIP
+
+# Ingress
+ingress:
+  enabled: true
+  host: demo-api.karabo.tech
+  # TLS is handled by cert-manager via ClusterIssuer
+  tls:
+    secretName: demo-api-tls
+
+# Environment variables passed to the container
+env:
+  APP_INSTANCE: "demo-api"
+  APP_VERSION: "0.1.0"
+  CLUSTER_NAME: "k3s-cluster"
+  ASPNETCORE_ENVIRONMENT: "Production"
+
+# Resource limits & requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+# ConfigMap items
+config:
+  appsettings.json: |
+    {
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      }
+    }

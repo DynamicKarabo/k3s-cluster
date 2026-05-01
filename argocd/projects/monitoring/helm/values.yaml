@@ -1,0 +1,81 @@
+# ── kube-prometheus-stack values for k3s-cluster ──
+# Disables Alertmanager, keeps Grafana + Prometheus for a lightweight portfolio setup.
+
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: true
+  adminPassword: prom-operator
+  persistence:
+    enabled: true
+    size: 5Gi
+  service:
+    type: ClusterIP
+    port: 3000
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - grafana.karabo.tech
+    path: /
+    pathType: Prefix
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: "default"
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  dashboardsConfigMaps:
+    default: "{{ include \"kube-prometheus-stack.fullname\" . }}-grafana-dashboards"
+  additionalDataSources:
+    - name: Prometheus
+      type: prometheus
+      url: http://{{ include \"kube-prometheus-stack.fullname\" . }}-prometheus:9090
+      access: proxy
+      isDefault: true
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    retention: 7d
+    retentionSize: 10GB
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+# Disable components that aren't needed in single-node
+defaultRules:
+  create: false
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeStateMetrics:
+  enabled: true
+nodeExporter:
+  enabled: true

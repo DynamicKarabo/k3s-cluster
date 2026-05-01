@@ -1,0 +1,29 @@
+---
+# ── k3s-cluster Master Playbook ──
+# Provisions a blank Ubuntu 24.04 VPS into a production-grade k3s cluster
+# with ArgoCD, cert-manager, and monitoring.
+
+- name: Provision k3s Cluster
+  hosts: k3s-vps
+  gather_facts: true
+  become: yes
+  vars_files:
+    - vars/main.yml
+    - "{{ lookup('first_found', ['vars/secrets.yml', vars/secrets_not_found], errors='ignore') }}"
+
+  pre_tasks:
+    - name: Ensure secrets file exists (optional)
+      set_fact:
+        secrets_not_found: true
+      when: vars/secrets.yml is undefined
+      changed_when: false
+
+  roles:
+    - role: common
+      tags: [common, base]
+    - role: k3s
+      tags: [k3s, kubernetes]
+    - role: argocd
+      tags: [argocd, gitops]
+    - role: cert-manager
+      tags: [cert-manager, tls]

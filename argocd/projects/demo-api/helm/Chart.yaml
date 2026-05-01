@@ -1,0 +1,17 @@
+apiVersion: v2
+name: demo-api
+description: A minimal .NET 10 API deployed on k3s — health checks, Prometheus metrics, env-driven config
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - dotnet
+  - api
+  - k3s
+  - demo
+home: https://github.com/DynamicKarabo/k3s-cluster
+sources:
+  - https://github.com/DynamicKarabo/k3s-cluster
+maintainers:
+  - name: Karabo
+    email: karabo@example.com

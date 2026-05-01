@@ -1,0 +1,13 @@
+# ── fail2ban jail.local template ──
+[DEFAULT]
+bantime = {{ fail2ban_bantime }}
+maxretry = {{ fail2ban_max_retries }}
+findtime = 600
+destemail = root@localhost
+action = %(action_mwl)s
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log

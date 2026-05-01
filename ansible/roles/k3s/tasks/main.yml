@@ -1,0 +1,49 @@
+---
+# ── k3s Role: install and configure k3s ──
+- name: Check if k3s is already installed
+  command: which k3s
+  register: k3s_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install k3s
+  shell: >
+    curl -sfL {{ k3s_install_url }} | sh -s -
+    {{ '--server' if k3s_server else '--agent' }}
+    {% if k3s_token %} --token {{ k3s_token }}{% endif %}
+    {% for san in k3s_tls_san %} --tls-san {{ san }}{% endfor %}
+    --disable local-storage
+    --disable metrics-server
+    --write-kubeconfig-mode 644
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_EXEC: "server"
+  args:
+    creates: /usr/local/bin/k3s
+  register: k3s_install_result
+
+- name: Wait for k3s to be ready
+  command: k3s kubectl get nodes
+  register: k3s_nodes
+  retries: 10
+  delay: 5
+  until: k3s_nodes.rc == 0
+  changed_when: false
+
+- name: Copy kubeconfig to root home
+  command: cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
+  args:
+    creates: /root/.kube/config
+
+- name: Set kubeconfig permissions
+  file:
+    path: /root/.kube/config
+    mode: "0600"
+
+- name: Label the node
+  command: >
+    k3s kubectl label node {{ ansible_hostname }}
+    node-role.kubernetes.io/worker=worker
+    --overwrite
+  changed_when: false
+  failed_when: false

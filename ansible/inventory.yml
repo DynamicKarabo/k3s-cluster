@@ -1,0 +1,6 @@
+all:
+  hosts:
+    k3s-vps:
+      ansible_host: 178.105.76.236
+      ansible_connection: local
+      ansible_user: root

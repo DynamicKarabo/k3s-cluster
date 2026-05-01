@@ -1,0 +1,56 @@
+---
+# ── ArgoCD Role: install via Helm, configure app-of-apps ──
+- name: Add ArgoCD Helm repository
+  kubernetes.core.helm_repository:
+    name: argo
+    repo_url: "{{ argocd_helm_repo }}"
+
+- name: Create argocd namespace
+  kubernetes.core.k8s:
+    name: "{{ argocd_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Install ArgoCD via Helm
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: argo/{{ argocd_chart }}
+    release_namespace: "{{ argocd_namespace }}"
+    chart_version: "{{ argocd_version }}"
+    values: "{{ argocd_values | to_json }}"
+    create_namespace: yes
+    wait: yes
+    wait_timeout: "5m"
+  register: argocd_install
+
+- name: Wait for ArgoCD pods to be ready
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ argocd_namespace }}"
+    label_selectors:
+      - app.kubernetes.io/name = argocd-server
+  register: argocd_pods
+  retries: 20
+  delay: 15
+  until: argocd_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length > 0
+
+- name: Get ArgoCD admin password
+  command: >
+    k3s kubectl -n argocd get secret argocd-initial-admin-secret
+    -o jsonpath="{.data.password}" | base64 -d
+  register: argocd_password
+  changed_when: false
+  failed_when: false
+
+- name: Display ArgoCD admin password
+  debug:
+    msg: "ArgoCD admin password: {{ argocd_password.stdout }}"
+  when: argocd_password.stdout is defined
+
+- name: Apply root ArgoCD application
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', '/root/projects/k3s-cluster/argocd/root.yaml') }}"
+  when: lookup('file', '/root/projects/k3s-cluster/argocd/root.yaml') is defined
+  delegate_to: localhost

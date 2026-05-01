@@ -1,0 +1,62 @@
+---
+# ── cert-manager Role: install via Helm, configure ClusterIssuer ──
+- name: Add Jetstack Helm repository
+  kubernetes.core.helm_repository:
+    name: jetstack
+    repo_url: "{{ cert_manager_helm_repo }}"
+
+- name: Create cert-manager namespace
+  kubernetes.core.k8s:
+    name: "{{ cert_manager_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Install cert-manager via Helm
+  kubernetes.core.helm:
+    name: cert-manager
+    chart_ref: jetstack/{{ cert_manager_chart }}
+    release_namespace: "{{ cert_manager_namespace }}"
+    chart_version: "{{ cert_manager_version }}"
+    values: "{{ cert_manager_values | to_json }}"
+    create_namespace: yes
+    wait: yes
+    wait_timeout: "5m"
+
+- name: Create Let's Encrypt ClusterIssuer (staging)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-staging
+      spec:
+        acme:
+          server: https://acme-staging-v02.api.letsencrypt.org/directory
+          email: "{{ letsencrypt_email }}"
+          privateKeySecretRef:
+            name: letsencrypt-staging-key
+          solvers:
+            - http01:
+                ingress:
+                  class: traefik
+
+- name: Create Let's Encrypt ClusterIssuer (production)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-prod
+      spec:
+        acme:
+          server: https://acme-v02.api.letsencrypt.org/directory
+          email: "{{ letsencrypt_email }}"
+          privateKeySecretRef:
+            name: letsencrypt-prod-key
+          solvers:
+            - http01:
+                ingress:
+                  class: traefik
