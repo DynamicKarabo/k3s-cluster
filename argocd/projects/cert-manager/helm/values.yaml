@@ -1,0 +1,7 @@
+# ── cert-manager Helm values ──
+
+cert-manager:
+  installCRDs: true
+  
+letsencrypt:
+  email: karabo@example.com

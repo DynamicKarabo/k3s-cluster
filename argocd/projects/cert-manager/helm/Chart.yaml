@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cert-manager
+description: cert-manager installation and cluster issuers for the cluster
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+dependencies:
+  - name: cert-manager
+    version: ~v1.16
+    repository: https://charts.jetstack.io
