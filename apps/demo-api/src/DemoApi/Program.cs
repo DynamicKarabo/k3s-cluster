@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ── Configuration from environment variables ──
 var configSection = builder.Configuration.GetSection("App");
 var instanceName = Environment.GetEnvironmentVariable("APP_INSTANCE") ?? "demo-api";
-var version = Environment.GetEnvironmentVariable("APP_VERSION") ?? "0.1.0";
+var version = Environment.GetEnvironmentVariable("APP_VERSION") ?? "0.1.1";
 var clusterName = Environment.GetEnvironmentVariable("CLUSTER_NAME") ?? "k3s-local";
 var listenPort = Environment.GetEnvironmentVariable("APP_PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{listenPort}");
