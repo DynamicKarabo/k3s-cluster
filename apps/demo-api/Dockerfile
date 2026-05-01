@@ -17,7 +17,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup --system app && adduser --system --ingroup app app
+RUN id -u app &>/dev/null || (groupadd --system app && useradd --system --gid app app)
 USER app
 
 # Copy published app
