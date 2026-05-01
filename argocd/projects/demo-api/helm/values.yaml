@@ -2,7 +2,7 @@
 # Image settings
 image:
   repository: ghcr.io/dynamickarabo/demo-api
-  tag: latest
+  tag: sha-1429866
   pullPolicy: IfNotPresent
 
 # Deployment replicas
