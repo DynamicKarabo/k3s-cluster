@@ -37,7 +37,7 @@ grafana:
   additionalDataSources:
     - name: Prometheus
       type: prometheus
-      url: http://{{ include \"kube-prometheus-stack.fullname\" . }}-prometheus:9090
+      url: http://monitoring-kube-prometheus-prometheus:9090
       access: proxy
       isDefault: true
 

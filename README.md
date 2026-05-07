@@ -5,7 +5,7 @@
 [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/DynamicKarabo/k3s-cluster/ci.yml?branch=main&style=flat-square)](https://github.com/DynamicKarabo/k3s-cluster/actions)
 [![License](https://img.shields.io/github/license/DynamicKarabo/k3s-cluster?style=flat-square)](LICENSE)
 
-**Version:** 0.1.1
+**Version:** 0.2.0
 
 ---
 
@@ -37,7 +37,9 @@
 - **API Backend:** .NET 10.0.7
 - **TLS Management:** cert-manager v1.16.5
 - **Ingress Controller:** Traefik (k3s built-in)
-- **Monitoring:** Prometheus/Grafana (pending deployment)
+- **Monitoring:** Prometheus/Grafana (ArgoCD-managed)
+- **Secrets Management:** External Secrets Operator (ArgoCD-managed)
+- **Backups:** Velero (ArgoCD-managed, daily backups)
 
 ## Quick Start
 
@@ -169,9 +171,6 @@ This runs the Ansible playbook to install Docker, k3s, ArgoCD, and cert-manager.
 ## Known Issues
 
 - **Single-Node limitation:** No High Availability (HA) as the cluster runs on a single node.
-- **Monitoring Pending:** Prometheus and Grafana are configured but currently pending deployment.
-- **No Automated Backups:** Backups are currently manual; no automated backup strategy is implemented.
-- **No Secrets Management:** Currently lacking a dedicated external secrets manager (e.g., HashiCorp Vault, External Secrets Operator).
 - **GitHub Actions Warnings:** Node.js 20 actions are deprecated and may show warnings during CI runs.
 
 ---

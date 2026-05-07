@@ -1,0 +1,11 @@
+# ── External Secrets Operator values for k3s-cluster ──
+installCRDs: true
+serviceMonitor:
+  enabled: false
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
