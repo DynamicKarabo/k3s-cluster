@@ -97,29 +97,82 @@ sudo k3s kubectl logs -n cert-manager -l app.kubernetes.io/name=cert-manager
 sudo k3s kubectl delete certificate -n demo-api demo-api-tls
 ```
 
-### Backup
+### Horizontal Pod Autoscaling
 
-Phase 1 does not include automated backups. Key paths to backup manually:
+The demo-api has an HPA configured in its Helm chart. It auto-scales between 1-5 replicas based on CPU (70% target) and memory (80% target):
 
 ```bash
-# k3s data (etcd, manifests, certs)
-/etc/rancher/k3s/
+# Check HPA status
+sudo k3s kubectl -n demo-api get hpa
 
-# ArgoCD config
-sudo k3s kubectl get applications -n argocd -o yaml
-
-# Prometheus data (if you want to keep history)
-sudo k3s kubectl get pvc -n monitoring
+# Describe HPA for detailed metrics
+sudo k3s kubectl -n demo-api describe hpa demo-api
 ```
+
+### Pod Disruption Budget
+
+A PDB ensures at most 1 pod is unavailable during voluntary disruptions (node drains, rolling updates):
+
+```bash
+# Check PDB
+sudo k3s kubectl -n demo-api get pdb
+```
+
+### Disaster Recovery
+
+#### Scenario A: Complete Node Failure
+
+1. Provision a new VPS (Hetzner CX33 or equivalent, Ubuntu 24.04)
+2. Run the bootstrap script:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/DynamicKarabo/k3s-cluster/main/scripts/bootstrap.sh | bash
+   ```
+3. Restore Velero backup:
+   ```bash
+   # List available backups
+   velero get backups
+   # Restore latest
+   velero restore create --from-backup <latest-backup-name>
+   ```
+4. ArgoCD auto-syncs all Application resources from Git
+5. Verify: `curl https://demo-api.karabo.tech/healthz`
+
+#### Scenario B: Accidental Resource Deletion
+
+1. ArgoCD detects drift within 3 minutes and auto-syncs
+2. If auto-sync fails, sync manually:
+   ```bash
+   argocd app sync demo-api
+   ```
+   Or via the ArgoCD UI.
+
+#### Scenario C: Bad Deployment (crash-loop)
+
+1. Rollback via ArgoCD CLI:
+   ```bash
+   argocd app rollback demo-api <previous-version>
+   ```
+2. Or revert the Git commit that introduced the bad image tag and push
+3. ArgoCD detects the revert and syncs the previous working version
+
+#### Backup Schedule (Velero)
+
+| Window | Type | Retention |
+|--------|------|-----------|
+| Daily 02:00 UTC | Automatic | 7 daily, 4 weekly |
+| Before deploys | On-demand | Manual cleanup |
 
 ### Scaling
 
-```bash
-# Scale the API
-sudo k3s kubectl -n demo-api scale deployment demo-api --replicas=3
-```
+For manual scaling outside of HPA:
 
-Or update `values.yaml` and let ArgoCD sync.
+```bash
+# Scale via kubectl (temporary)
+sudo k3s kubectl -n demo-api scale deployment demo-api --replicas=3
+
+# Scale via Helm values (permanent)
+# Update values.yaml → replicas: 3 → ArgoCD syncs
+```
 
 ### Common Commands Cheatsheet
 

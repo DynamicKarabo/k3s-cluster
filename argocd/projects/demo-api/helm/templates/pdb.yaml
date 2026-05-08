@@ -1,0 +1,14 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "demo-api.fullname" . }}
+  labels:
+    app: {{ include "demo-api.name" . }}
+spec:
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  selector:
+    matchLabels:
+      app: {{ include "demo-api.name" . }}
+      release: {{ .Release.Name }}
+{{- end }}
