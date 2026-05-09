@@ -1,5 +1,8 @@
 name: demo-api CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
